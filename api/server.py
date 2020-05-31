@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from flask import Flask, request, jsonify
+from flask import Flask,request,Response,jsonify
 import RPi.GPIO as GPIO
 import signal
 import sys
@@ -17,7 +17,6 @@ state = {
         "misc": False,
     }
 }
-
 #####################################################################
 ############################  App Routes  ###########################
 #####################################################################
@@ -26,6 +25,18 @@ state = {
 @app.route("/")
 def index():
     return app.send_static_file('index.html')
+
+
+@app.route("/state")
+def getState():
+    return jsonify(state)
+
+@app.route("/stream")
+def sendStateStream():
+    return Response(
+                    event_stream(),
+                    mimetype="text/event-stream"
+                )
 
 
 @app.route("/lights", methods=['GET'])
@@ -81,6 +92,8 @@ def signal_handler(sig, frame):
     sys.exit(0)
 
 
+def event_stream():
+    return state
 #####################################################################
 ###########################  ENTRY POINT  ###########################
 #####################################################################

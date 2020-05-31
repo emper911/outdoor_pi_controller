@@ -1,6 +1,6 @@
 const host = "http://OutdoorController:3000";
 
-const state = {
+let state = {
     power: {
         lights: false,
         pump: false,
@@ -9,12 +9,26 @@ const state = {
 }
 
 const init = () => {
+    state = getServerState();
+
     let powerButtons = Object.keys(state.power).map((source) => {
          return document.getElementById(`${source}`)
     });
     powerButtons.map((source) => {
         source.addEventListener("click", powerButtonHandler)
     });
+}
+
+const getServerState = async () => {
+    let url = new URL(host + '/' + 'state')
+    try {
+        const response = await fetch(url);
+        return response.json();
+    }
+    catch (err) {
+        console.log(err);
+        return null;
+    }
 }
 
 const powerButtonHandler = async (event) => {
@@ -34,16 +48,21 @@ const powerButtonHandler = async (event) => {
 
 const relaySwitch = async (source, power) => {
     let url = new URL(host + '/' + source);
-    let params = {powerStatus: power };
+    let params = { powerStatus: power };
     url.search = new URLSearchParams(params).toString();
-    try{
+    try {
         const response = await fetch(url);
         return response.json();
     }
-    catch(err){
+    catch (err){
         console.log(err);
         return null;
     }
 }
 
 window.addEventListener("load", init);
+//Event Stream
+var source = new EventSource(host + '/stream');
+window.addEventListener("message", (event) => {
+    state = event.data;
+});
