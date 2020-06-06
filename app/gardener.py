@@ -3,6 +3,7 @@
 # GPIO.setmode(GPIO.BOARD)
 # GPIO.setup(PinMapping.values(), GPIO.OUT)
 import functools
+import json
 from flask import (
     Blueprint, flash, g, redirect, render_template,
     request, Response, session, url_for, jsonify
@@ -96,6 +97,7 @@ def power(output, powerStatus):
     # GPIO.output(PinMapping[output], powerStatus)
 
 def event_stream():
-    print(state)
-    return state
+    stateString = json.dumps(state)
+    print(stateString)
+    return stateString
 
