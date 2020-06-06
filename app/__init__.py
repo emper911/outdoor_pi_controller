@@ -1,8 +1,10 @@
 import os
 import sys
+import signal
 sys.path.append('/Users/riki/Documents/Git/outdoor_pi_controller/app')
 from flask import Flask, render_template, send_from_directory
 from gardener import get_blueprint
+
 
 def create_app(test_config=None):
     # create and configure the app
