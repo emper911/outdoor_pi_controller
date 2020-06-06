@@ -1,4 +1,4 @@
-const host = "http://OutdoorController:3000";
+const host = "http://OutdoorController:3000/garden";
 
 let state = {
     power: {
