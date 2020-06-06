@@ -14,7 +14,7 @@ from flask import (
 PUMP = 'pump'
 LIGHTS = 'lights'
 MISC = 'misc'
-#GPIO globals
+#GPIO global
 pinMapping = {
     'pump': 11,
     'lights': 13,
@@ -44,18 +44,16 @@ def getState():
 
 @garden.route('/stream', methods=['GET'])
 def sendStateStream():
-    if stateChange:
-        stateChange = False
-        return Response(event_stream(), mimetype='text/event-stream')
+    return Response(event_stream(), mimetype='text/event-stream')
 
 
 @garden.route('/lights', methods=['GET'])
 def lights():
+    print("lights")
     error = None
     if request.method == 'GET':
         powerStatus = request.args.get('powerStatus')
         power(LIGHTS, powerStatus)
-        stateChange = True
     else:
         error = 'Invalid request method'
         return error, 404
@@ -65,11 +63,11 @@ def lights():
 
 @garden.route('/pump', methods=['GET'])
 def pump():
+    print("pump")
     error = None
     if request.method == 'GET':
         powerStatus = request.args.get('powerStatus')
         power(PUMP, powerStatus)
-        stateChange = True
     else:
         error = 'Invalid request method'
         return error, 404
@@ -78,12 +76,12 @@ def pump():
 
 
 @garden.route('/misc', methods=['GET'])
-def misc(name):
+def misc():
+    print("misc")
     error = None
     if request.method == 'GET':
         powerStatus = request.args.get('powerStatus')
         power(MISC, powerStatus)
-        stateChange = True
     else:
         error = 'Invalid request method'
         return error, 404
@@ -94,9 +92,10 @@ def misc(name):
 ########################## Helper Functions  ########################
 #####################################################################
 def power(output, powerStatus):
-    state['power'][output] = powerStatus
+    state['power'][output] = True if powerStatus == 'true' else False
     # GPIO.output(PinMapping[output], powerStatus)
 
 def event_stream():
+    print(state)
     return state
 

@@ -1,4 +1,5 @@
-const host = "http://OutdoorController:3000/garden";
+// const host = "http://OutdoorController:3000/garden";
+const host = "http://localhost:3000/garden";
 
 let state = {
     power: {
@@ -9,7 +10,6 @@ let state = {
 }
 
 const init = () => {
-    state = getServerState();
 
     let powerButtons = Object.keys(state.power).map((source) => {
          return document.getElementById(`${source}`)
@@ -19,31 +19,33 @@ const init = () => {
     });
 }
 
-const getServerState = async () => {
-    let url = new URL(host + '/' + 'state')
-    try {
-        const response = await fetch(url);
-        return response.json();
-    }
-    catch (err) {
-        console.log(err);
-        return null;
-    }
-}
+// const getServerState = async () => {
+//     let url = new URL(host + '/' + 'state')
+//     try {
+//         const response = await (await fetch(url)).json();
+//         console.log(response);
+//         return response;
+//     }
+//     catch (err) {
+//         console.log(err);
+//         return null;
+//     }
+// }
 
 const powerButtonHandler = async (event) => {
     const source = event.target.id;
     const powerStatus = !state.power[source];
-
+    console.log(source);
     const data = await relaySwitch(source, powerStatus);
     if (data) {
-        state.power[source] = data["powerStatus"];
+        state.power[source] = (data["powerStatus"] == "true");
         const button = document.getElementById(source);
-        (data[source]) ? 
+        (state.power[source]) ?
             button.classList.add("controller-buttons-active")
         :
             button.classList.remove("controller-buttons-active")
     }
+    console.log(state);
 }
 
 const relaySwitch = async (source, power) => {
@@ -52,7 +54,7 @@ const relaySwitch = async (source, power) => {
     url.search = new URLSearchParams(params).toString();
     try {
         const response = await fetch(url);
-        return response.json();
+        return await response.json();
     }
     catch (err){
         console.log(err);
@@ -60,9 +62,14 @@ const relaySwitch = async (source, power) => {
     }
 }
 
+const updateState = (state) => {
+    console.log(state);
+}
+
 window.addEventListener("load", init);
 //Event Stream
 var source = new EventSource(host + '/stream');
 window.addEventListener("message", (event) => {
     state = event.data;
+    update_state(state);
 });
