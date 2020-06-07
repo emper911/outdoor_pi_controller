@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-# import RPi.GPIO as GPIO
-# GPIO.setmode(GPIO.BOARD)
-# GPIO.setup(PinMapping.values(), GPIO.OUT)
+import RPi.GPIO as GPIO
 import functools
 import json
 from flask import (
@@ -17,11 +15,12 @@ import time
 PUMP = 'pump'
 LIGHTS = 'lights'
 MISC = 'misc'
+stateChange = False
 #GPIO global
 pinMapping = {
-    'pump': 11,
-    'lights': 13,
-    'misc': 15
+    'lights': 17,
+    'pump': 27,
+    'misc': 22
 }
 state = {
     'power': {
@@ -30,20 +29,27 @@ state = {
         'misc': False,
     },
 }
-stateChange = False
 
 
+garden = Blueprint('garden', __name__, url_prefix='/garden')
+
+def get_blueprint():
+    pinList = list(pinMapping.values())
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(pinList, GPIO.OUT)
+    return garden
 #####################################################################
 ############################  App Routes  ###########################
 #####################################################################
-garden = Blueprint('garden', __name__, url_prefix='/garden')
-def get_blueprint():
-    return garden
+def cleanup_gpios():
+    GPIO.cleanup()
+    print("cleaning up gpios...")
 
 
 @garden.route('/state', methods=['GET'])
 def getState():
     return jsonify(state)
+
 
 @garden.route('/stream', methods=['GET'])
 @cross_origin()
@@ -58,7 +64,8 @@ def lights():
     error = None
     if request.method == 'GET':
         powerStatus = request.args.get('powerStatus')
-        power(LIGHTS, powerStatus)
+        state['power'][LIGHTS] = True if powerStatus == 'true' else False
+        power(LIGHTS)
         stateChange = True
     else:
         error = 'Invalid request method'
@@ -74,7 +81,8 @@ def pump():
     global stateChange
     if request.method == 'GET':
         powerStatus = request.args.get('powerStatus')
-        power(PUMP, powerStatus)
+        state['power'][PUMP] = True if powerStatus == 'true' else False
+        power(PUMP)
         stateChange = True
     else:
         error = 'Invalid request method'
@@ -90,7 +98,8 @@ def misc():
     global stateChange
     if request.method == 'GET':
         powerStatus = request.args.get('powerStatus')
-        power(MISC, powerStatus)
+        state['power'][MISC] = True if powerStatus == 'true' else False
+        power(MISC)
         stateChange = True
     else:
         error = 'Invalid request method'
@@ -101,9 +110,8 @@ def misc():
 #####################################################################
 ########################## Helper Functions  ########################
 #####################################################################
-def power(output, powerStatus):
-    state['power'][output] = True if powerStatus == 'true' else False
-    # GPIO.output(PinMapping[output], powerStatus)
+def power(output):
+    GPIO.output(pinMapping[output], state['power'][output])
 
 def event_stream():
     while True:

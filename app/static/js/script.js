@@ -1,5 +1,5 @@
 // const host = "http://OutdoorController:3000/garden";
-const host = "http://localhost:3000/garden";
+const host = "http://192.168.1.205:3000/garden";
 
 let state = {
     power: {
@@ -15,7 +15,7 @@ const init = async () => {
     //get button elements
     await initButtons();
     //Event Stream
-    eventStreamHandler();
+    initEventStreamHandler();
 
 }
 
@@ -25,28 +25,28 @@ const initState = async () => {
         const response = await fetch(url);
         state = await response.json();
         console.log(`Starting State: ${JSON.stringify(state)}`);
-    }
-    catch (err) {
+    } catch (err) {
         console.log(err);
         return null;
     } 
 };
 
 const initButtons = async () => {
+    // Get a list of button elements by source
     let powerButtons = Object.keys(state.power).map((source) => {
         return document.getElementById(`${source}`)
     });
-    //attach event listeners and update active state
+    // Attach power button handler and updates active buttons
     powerButtons.map((button) => {
         button.addEventListener("click", powerButtonHandler);
         (state.power[button.id]) ?
             button.classList.add("controller-buttons-active")
-            :
+        :
             button.classList.remove("controller-buttons-active")
     });
 }
 
-const eventStreamHandler = () => {
+const initEventStreamHandler = () => {
     const source = new EventSource(host + '/stream');
     source.addEventListener('open', () => console.log("Sse connection opened"));
     source.addEventListener('error', () => console.log("error occured"));
@@ -56,24 +56,6 @@ const eventStreamHandler = () => {
         updateState(responseJson);
     });
 };
-
-const updateState = async (newState) => {
-    state = newState;
-    await updateButtons();
-}
-
-const updateButtons = async () => {
-    let powerButtons = Object.keys(state.power).map((source) => {
-        return document.getElementById(`${source}`)
-    });
-    //attach event listeners and update active state
-    powerButtons.map((button) => {
-        (state.power[button.id]) ?
-            button.classList.add("controller-buttons-active")
-            :
-            button.classList.remove("controller-buttons-active")
-    });
-}
 
 const powerButtonHandler = async (event) => {
     const source = event.target.id;
@@ -86,8 +68,31 @@ const powerButtonHandler = async (event) => {
         (state.power[source]) ?
             button.classList.add("controller-buttons-active")
         :
-            button.classList.remove("controller-buttons-active")
+                button.classList.remove("controller-buttons-active")
     }
+}
+
+/*
+######################################################################
+########################## Helper Functions ##########################
+######################################################################
+*/
+const updateState = async (newState) => {
+    state = newState;
+    await updateButtons();
+}
+
+const updateButtons = async () => {
+    let powerButtons = Object.keys(state.power).map((source) => {
+        return document.getElementById(`${source}`)
+    });
+    //attach event listeners and update active buttons
+    powerButtons.map((button) => {
+        (state.power[button.id]) ?
+            button.classList.add("controller-buttons-active")
+            :
+            button.classList.remove("controller-buttons-active")
+    });
 }
 
 const relaySwitch = async (source, power) => {
@@ -97,8 +102,7 @@ const relaySwitch = async (source, power) => {
     try {
         const response = await fetch(url);
         return await response.json();
-    }
-    catch (err){
+    } catch (err){
         console.log(err);
         return null;
     }

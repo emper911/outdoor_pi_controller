@@ -1,9 +1,8 @@
 import os
 import sys
-import signal
-sys.path.append('/Users/riki/Documents/Git/outdoor_pi_controller/app')
+sys.path.append('/home/pi/Documents/Git/outdoor_pi_controller/app')
 from flask import Flask, render_template, send_from_directory
-from gardener import get_blueprint
+from app import gardener
 
 
 def create_app(test_config=None):
@@ -21,7 +20,11 @@ def create_app(test_config=None):
     def root():
         return render_template('index.html')
 
-    app.register_blueprint(get_blueprint())
-
-
+    app.register_blueprint(gardener.get_blueprint())
+    
     return app
+
+def exit_gracefully():
+    gardener.cleanup_gpios()
+    print('Server is terminating\n\nBye Bye Now :)')
+    sys.exit(0)
