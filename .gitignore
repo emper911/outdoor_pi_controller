@@ -1,3 +1,6 @@
 /.vscode
 /instance
 app/__pycache__
+app/*.pyc
+._waitress_server.py
+app/static/._script.js

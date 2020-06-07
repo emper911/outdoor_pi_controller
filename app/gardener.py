@@ -120,4 +120,3 @@ def event_stream():
         yield data_string
         time.sleep(1)
         print(f"Event Stream: {data_string}")
-
