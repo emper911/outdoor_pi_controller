@@ -28,7 +28,7 @@ class DistanceSensorController:
         print ("Distance:",distance,"cm")
         return distance
 
-    def startMeasuring(self, outputTarget, cycleLength=60000):
+    def startMeasuring(self, outputTarget, outputTargetName, cycleLength=60000):
         self.measuring = True
         start_timestamp = datetime.utcnow()
         measured = False
@@ -36,7 +36,7 @@ class DistanceSensorController:
             lapsedTime = datetime.utcnow() - start_timestamp
             if lapsedTime < cycleLength:
                 if not measured:
-                    outputTarget = self.getDistance()
+                    outputTarget[outputTargetName] = self.getDistance()
                     measured = True
             else:
                 start_timestamp = datetime.utcnow()
