@@ -9,34 +9,64 @@ from flask import (
 from flask_cors import cross_origin
 import time
 
+from app import Pump
+from app import DistanceSensor
+
 #####################################################################
 ############################  GLOBALS  ##############################
 #####################################################################
 PUMP = 'pump'
 LIGHTS = 'lights'
 MISC = 'misc'
+WATERLEVEL = 'waterlevel'
+WATERLEVEL_TRIGGER = 'waterlevel_trigger'
+WATERLEVEL_ECHO = 'waterlevel_echo'
+
 stateChange = False
 #GPIO global
 pinMapping = {
-    'lights': 17,
-    'pump': 27,
-    'misc': 22
+    'input': {
+        'waterlevel_echo': 12,
+    },
+    'output': {
+        'lights': 17,
+        'pump': 27,
+        'misc': 22,
+        'waterlevel_trigger': 7,
+    }
 }
 state = {
     'power': {
         'lights': False,
         'pump': False,
         'misc': False,
+        'waterlevel': False
     },
+    'sensors': {
+        'waterlevel': -1,
+    }
 }
 
 
 garden = Blueprint('garden', __name__, url_prefix='/garden')
+pump_1 = None
+distanceSensor_1 = None
 
 def get_blueprint():
-    pinList = list(pinMapping.values())
+    global pump_1, distanceSensor_1
+    pinInputList = list(pinMapping['input'].values())
+    pinOutputList = list(pinMapping['output'].values())
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(pinList, GPIO.OUT)
+    GPIO.setup(pinInputList, GPIO.IN)
+    GPIO.setup(pinOutputList, GPIO.OUT)
+
+    pump_1 = Pump.PumpController(powerPin=pinMapping['output'][PUMP], gpio=GPIO)
+    distanceSensor_1 = DistanceSensor.DistanceSensorController(
+        triggerPin=pinMapping['input'][WATERLEVEL_TRIGGER],
+        echoPin=pinMapping['input'][WATERLEVEL_ECHO],
+        gpio=GPIO
+    )
+
     return garden
 #####################################################################
 ############################  App Routes  ###########################
@@ -63,8 +93,7 @@ def lights():
     print("lights")
     error = None
     if request.method == 'GET':
-        powerStatus = request.args.get('powerStatus')
-        state['power'][LIGHTS] = True if powerStatus == 'true' else False
+        state['power'][LIGHTS] = request.args.get('powerStatus') == 'true'
         power(LIGHTS)
         stateChange = True
     else:
@@ -80,15 +109,34 @@ def pump():
     error = None
     global stateChange
     if request.method == 'GET':
-        powerStatus = request.args.get('powerStatus')
-        state['power'][PUMP] = True if powerStatus == 'true' else False
-        power(PUMP)
+        powerStatus = request.args.get('powerStatus') == 'true'
+        state['power'][PUMP] = powerStatus
+        pump_1.power(powerStatus)
         stateChange = True
     else:
         error = 'Invalid request method'
         return error, 404
 
     return jsonify({'powerStatus': powerStatus})
+
+
+@garden.route('/pump/schedule', methods=['GET'])
+def pumpSchedule():
+    if request.method == 'GET':
+        status = request.args.get('status')
+        if status == 'on':
+            state['power'][PUMP] = True
+            onTime = request.args.get('onTime')
+            cycleLength = request.args.get('cycle')
+            endTime = request.args.get('endTime')
+            if endTime:
+                pump_1.start_schedule_pump(onTime, cycleLength, endTime)
+            else:
+                pump_1.start_schedule_pump(onTime, cycleLength)
+
+        else:
+            state['power'][PUMP] = False
+            pump_1.stop_schedule_pump()
 
 
 @garden.route('/misc', methods=['GET'])
@@ -97,8 +145,8 @@ def misc():
     error = None
     global stateChange
     if request.method == 'GET':
-        powerStatus = request.args.get('powerStatus')
-        state['power'][MISC] = True if powerStatus == 'true' else False
+        powerStatus = request.args.get('powerStatus') == 'true'
+        state['power'][MISC] = powerStatus
         power(MISC)
         stateChange = True
     else:
@@ -106,6 +154,21 @@ def misc():
         return error, 404
 
     return jsonify({'powerStatus': powerStatus})
+
+
+@garden.route('/waterlevel', methods=['GET'])
+def water_level():
+    print("waterlevel")
+    error = None
+    global stateChange
+    if request.method == 'GET':
+        powerStatus = request.args.get('powerStatus') == 'true'
+        state['power'][WATERLEVEL] = powerStatus
+        stateChange = True
+        if powerStatus:
+            distanceSensor_1.startMeasuring(state['sensors'], WATERLEVEL)
+        else:
+            distanceSensor_1.stopMeasuring()
 
 #####################################################################
 ########################## Helper Functions  ########################

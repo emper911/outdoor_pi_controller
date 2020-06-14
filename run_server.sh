@@ -1,2 +1,2 @@
 #!/bin/zsh
-python3 waitress_server.py
+sudo python3 waitress_server.py

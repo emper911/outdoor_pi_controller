@@ -1,5 +1,5 @@
 // const host = "http://OutdoorController:3000/garden";
-const host = "http://192.168.1.205:3000/garden";
+const host = "http://192.168.1.205:80/garden";
 
 let state = {
     power: {
@@ -22,7 +22,10 @@ const init = async () => {
 const initState = async () => {
     let url = new URL(host + '/' + 'state');
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, {
+    		method: 'GET', // *GET, POST, PUT, DELETE, etc.
+    		mode: 'no-cors', // no-cors, *cors, same-origin );
+	});
         state = await response.json();
         console.log(`Starting State: ${JSON.stringify(state)}`);
     } catch (err) {
@@ -100,7 +103,10 @@ const relaySwitch = async (source, power) => {
     let params = { powerStatus: power };
     url.search = new URLSearchParams(params).toString();
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, {
+	    method: 'GET', // *GET, POST, PUT, DELETE, etc.
+	    mode: 'no-cors', // no-cors, *cors, same-origin);
+	});
         return await response.json();
     } catch (err){
         console.log(err);

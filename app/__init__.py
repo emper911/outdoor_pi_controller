@@ -1,8 +1,9 @@
 import os
 import sys
 sys.path.append('/home/pi/Documents/Git/outdoor_pi_controller/app')
+sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 from flask import Flask, render_template, send_from_directory
-from app import gardener
+from app import Gardener
 
 
 def create_app(test_config=None):
@@ -20,7 +21,7 @@ def create_app(test_config=None):
     def root():
         return render_template('index.html')
 
-    app.register_blueprint(gardener.get_blueprint())
+    app.register_blueprint(Gardener.get_blueprint())
     
     return app
 
