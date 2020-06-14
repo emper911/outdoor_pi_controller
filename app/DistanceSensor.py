@@ -9,7 +9,6 @@ class DistanceSensorController:
         self.gpio = gpio
         self.measuring = False
 
-
     def getDistance(self):
         print("Calculating distance")
         self.gpio.output(self.triggerPin, self.gpio.HIGH)
@@ -41,7 +40,6 @@ class DistanceSensorController:
             else:
                 start_timestamp = datetime.utcnow()
                 measured = False
-            
 
     def stopMeasuring(self):
         self.measuring = False

@@ -93,7 +93,8 @@ def lights():
     print("lights")
     error = None
     if request.method == 'GET':
-        state['power'][LIGHTS] = request.args.get('powerStatus') == 'true'
+        powerStatus = request.args.get('powerStatus') == 'true'
+        state['power'][LIGHTS] = powerStatus
         power(LIGHTS)
         stateChange = True
     else:
