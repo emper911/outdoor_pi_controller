@@ -5,6 +5,7 @@ let state = {
     power: {
         lights: false,
         pump: false,
+        pump2: false,
         misc: false,
     }
 }
@@ -34,7 +35,7 @@ const initState = async () => {
 const initButtons = async () => {
     // Get a list of button elements by source
     let powerButtons = Object.keys(state.power).map((source) => {
-        return document.getElementById(`${source}`)
+        return document.getElementById(source);
     });
     // Attach power button handler and updates active buttons
     powerButtons.map((button) => {
@@ -68,7 +69,7 @@ const powerButtonHandler = async (event) => {
         (state.power[source]) ?
             button.classList.add("controller-buttons-active")
         :
-                button.classList.remove("controller-buttons-active")
+            button.classList.remove("controller-buttons-active")
     }
 }
 

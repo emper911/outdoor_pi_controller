@@ -13,19 +13,22 @@ import time
 ############################  GLOBALS  ##############################
 #####################################################################
 PUMP = 'pump'
+PUMP2 = 'pump2'
 LIGHTS = 'lights'
 MISC = 'misc'
 stateChange = False
 #GPIO global
 pinMapping = {
     'lights': 17,
-    'pump': 27,
-    'misc': 22
+    'pump': 18,
+    'pump2': 22,
+    'misc': 23
 }
 state = {
     'power': {
         'lights': False,
         'pump': False,
+        'pump2': False,
         'misc': False,
     },
 }
@@ -36,7 +39,7 @@ garden = Blueprint('garden', __name__, url_prefix='/garden')
 def get_blueprint():
     pinList = list(pinMapping.values())
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(pinList, GPIO.OUT)
+    GPIO.setup(pinList, GPIO.OUT, initial=1)
     return garden
 #####################################################################
 ############################  App Routes  ###########################
@@ -64,7 +67,7 @@ def lights():
     error = None
     if request.method == 'GET':
         powerStatus = request.args.get('powerStatus')
-        state['power'][LIGHTS] = True if powerStatus == 'true' else False
+        state['power'][LIGHTS] = powerStatus == 'true'
         power(LIGHTS)
         stateChange = True
     else:
@@ -81,8 +84,24 @@ def pump():
     global stateChange
     if request.method == 'GET':
         powerStatus = request.args.get('powerStatus')
-        state['power'][PUMP] = True if powerStatus == 'true' else False
+        state['power'][PUMP] = powerStatus == 'true'
         power(PUMP)
+        stateChange = True
+    else:
+        error = 'Invalid request method'
+        return error, 404
+
+    return jsonify({'powerStatus': powerStatus})
+
+@garden.route('/pump2', methods=['GET'])
+def pump2():
+    print("pump2")
+    error = None
+    global stateChange
+    if request.method == 'GET':
+        powerStatus = request.args.get('powerStatus')
+        state['power'][PUMP2] = powerStatus == 'true'
+        power(PUMP2)
         stateChange = True
     else:
         error = 'Invalid request method'
@@ -111,7 +130,8 @@ def misc():
 ########################## Helper Functions  ########################
 #####################################################################
 def power(output):
-    GPIO.output(pinMapping[output], state['power'][output])
+    powerStatus = not state['power'][output] # Relays being used are in reverse order
+    GPIO.output(pinMapping[output], powerStatus)
 
 def event_stream():
     while True:

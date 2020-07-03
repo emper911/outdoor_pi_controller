@@ -26,6 +26,7 @@ html, body{
     "header header header"
     ". lights ."
     ". pump ."
+    ". pump2 ."
     ". misc .";
 
 }
@@ -42,6 +43,11 @@ html, body{
 
 .controller-pump{
     grid-area: pump;
+    align-self: center;
+}
+
+.controller-pump2{
+    grid-area: pump2;
     align-self: center;
 }
 
