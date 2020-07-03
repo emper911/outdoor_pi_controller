@@ -30,9 +30,9 @@ pinMapping = {
     },
     'output': {
         'lights': 17,
-        'pump': 27,
+        'pump': 18,
         'misc': 22,
-        'waterlevel_trigger': 7,
+        'waterlevel_trigger': 23,
     }
 }
 state = {
@@ -62,9 +62,9 @@ def get_blueprint():
 
     pump_1 = Pump.PumpController(powerPin=pinMapping['output'][PUMP], gpio=GPIO)
     distanceSensor_1 = DistanceSensor.DistanceSensorController(
-        triggerPin=pinMapping['input'][WATERLEVEL_TRIGGER],
-        echoPin=pinMapping['input'][WATERLEVEL_ECHO],
-        gpio=GPIO
+        triggerPin = pinMapping['output'][WATERLEVEL_TRIGGER],
+        echoPin = pinMapping['input'][WATERLEVEL_ECHO],
+        gpio = GPIO
     )
 
     return garden

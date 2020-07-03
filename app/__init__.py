@@ -27,6 +27,6 @@ def create_app(test_config=None):
 
 
 def exit_gracefully():
-    gardener.cleanup_gpios()
+    Gardener.cleanup_gpios()
     print('Server is terminating\n\nBye Bye Now :)')
     sys.exit(0)
